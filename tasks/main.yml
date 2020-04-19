@@ -4,17 +4,3 @@
   tags:
     - riprap
     - riprap-install
-
-- include: configure_dirs.yml
-  tags:
-    - riprap
-
-- include: database_config.yml
-  tags:
-    - riprap
-    - database
-
-- include: apache_config.yml
-  tags:
-    - riprap
-    - apache

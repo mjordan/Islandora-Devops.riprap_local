@@ -1,4 +1,3 @@
-
 - name: Check for Existing microservice
   stat:
     path: "{{ riprap_home }}/riprap/vendor"
@@ -9,15 +8,9 @@
     repo: https://github.com/mjordan/riprap.git
     dest: "{{ riprap_home }}/riprap"
     force: yes
+    version: dotenv
   when: riprap.stat.exists == False
-
-- name: Change riprap directory ownership, group and permissions
-  file:
-    path: "{{ riprap_home }}/riprap"
-    owner:  "{{ webserver_app_user }}"
-    group:  "{{ webserver_app_user }}"
-    mode: '0755'
-    recurse: True
+  become: no
 
 - name: Composer Install Riprap Microservice
   composer:
@@ -25,101 +18,51 @@
     working_dir: "{{ riprap_home }}/riprap"
   ignore_errors: yes
   when: riprap.stat.exists == False
-  become_user:  "{{ webserver_app_user }}"
-
-- name: Open permissions on riprap cache
-  file:
-    path: "{{ riprap_home }}/riprap/var/cache"
-    owner:  "{{ webserver_app_user }}"
-    group:  "{{ webserver_app_user }}"
-    mode: '0777'
-    recurse: True
-
-- name: Composer Update Riprap Microservice
-  command: "composer update"
-  args:
-    chdir: "{{ riprap_home }}/riprap"
-  become_user:  "{{ webserver_app_user }}"
-
-- name: Add Islandora Ansible Routes
-  blockinfile:
-    path: "{{ riprap_home }}/riprap/config/routes.yaml"
-    create: no
-    block: |
-      app_riprap_fixity_events_read_is_islandora:
-          path: /
-          controller: App\Controller\FixityController::read
-          methods: [GET, HEAD]
-
-      app_riprap_fixity_events_add_islandora:
-          path: /
-          controller: App\Controller\FixityController::add
-          methods: [POST]
-
-      app_riprap_fixity_events_update_islandora:
-          path: /
-          controller: App\Controller\FixityController::update
-          methods: [PATCH]
+  become: no
 
 - name: Edit .env file
   lineinfile:
     path: "{{ riprap_home }}/riprap/.env"
     regexp: 'DATABASE_URL=sqlite:///%kernel.project_dir%/var/data.db'
-    line: 'DATABASE_URL=mysql://{{ drupal_db_user}}:{{ drupal_db_password }}@127.0.0.1:3306/{{ drupal_db_name }}'
+    line: 'DATABASE_URL=mysql://root:islandora@127.0.0.1:3306/riprap'
+  become: no
 
+- name: Copy doctrine.yaml
+  copy: src=doctrine.yaml dest={{ riprap_home }}/riprap/config/packages/doctrine.yaml
 
+- name: Create Riprap database
+  command: "php ./bin/console doctrine:database:create"
+  args:
+    chdir: "{{ riprap_home }}/riprap"
 
-- name: Create target directory
-  file:
-    path: "{{ private_file_dir }}/riprap_config"
-    state: directory
-    owner: "{{ webserver_app_user }}"
-    group: "{{ webserver_app_user }}"
-    mode: '0777'
-  become: yes
+- name: Run Riprap make:migration
+  command: "php ./bin/console -n make:migration"
+  args:
+    chdir: "{{ riprap_home }}/riprap"
 
-- name: Install riprap RDM config file
-  template:
-    src: "riprap_config.j2"
-    dest: "{{ private_file_dir }}/riprap_config/islandora_riprap_config.yml"
-    owner: "{{ webserver_app_user }}"
-    group: "{{ webserver_app_user }}"
-  become_user: root
+- name: Run Riprap migration
+  command: "php ./bin/console -n doctrine:migrations:migrate"
+  args:
+    chdir: "{{ riprap_home }}/riprap"
 
 - name: Install Drupal Islandora Riprap module from Github
   git:
-    repo: https://github.com/roblib/islandora_riprap.git
+    repo: https://github.com/mjordan/islandora_riprap.git
     dest: "{{ drupal_core_path }}/modules/contrib/islandora_riprap"
     force: yes
+  become: no
 
 - name: Enable Riprap drupal module
   command: "{{ drush_path }} --root {{ drupal_core_path }} -y en islandora_riprap"
 
 - name: Enable JSON:API module (not currently enabled by default
   command: "{{ drush_path }} --root {{ drupal_core_path }} -y en jsonapi"
-- name: Set Riprap rest endpoint
-  command: "{{ drush_path }} --root {{ drupal_core_path }} cset islandora_riprap.settings riprap_rest_endpoint {{ riprap_rest_endpoint }} -y"
 
-- name: Set Riprap gemini endpoint
-  command: "{{ drush_path }} --root {{ drupal_core_path }} cset islandora_riprap.settings gemini_rest_endpoint {{ riprap_gemini_rest_endpoint }} -y"
+- name: Set Riprap mode 
+  command: "{{ drush_path }} --root {{ drupal_core_path }} cset islandora_riprap.settings riprap_mode local -y"
 
-- name: Set default content type
-  command: "{{ drush_path }} --root {{ drupal_core_path }} cset islandora_riprap.settings fixity_content_type {{ default_data_type }} -y"
+- name: Set Riprap local directory
+  command: "{{ drush_path }} --root {{ drupal_core_path }} cset islandora_riprap.settings riprap_local_directory {{ riprap_local_directory }} -y"
 
-- name: Set login creds
-  command: "{{ drush_path }} --root {{ drupal_core_path }} cset islandora_riprap.settings user_name {{ drupal_account_name }} -y"
-
-- name: Set login creds
-  command: "{{ drush_path }} --root {{ drupal_core_path }} cset islandora_riprap.settings user_pass {{ drupal_account_pass }} -y"
-
-- name: Create daily cron job
-  cron:
-    name: "update fixity"
-    minute: "0"
-    hour: "5"
-    job: "php {{ riprap_home }}/riprap/bin/console app:riprap:check_fixity --settings={{ private_file_dir }}/riprap_config/islandora_riprap_config.yml"
-
-- name: restart apache
-  service:
-    name: apache2
-    state: restarted
+- name: Set Riprap local settings file
+  command: "{{ drush_path }} --root {{ drupal_core_path }} cset islandora_riprap.settings riprap_local_settings_file {{ riprap_local_settings_file }} -y"
