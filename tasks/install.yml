@@ -75,9 +75,5 @@
 - name: Set Riprap local settings file
   command: "{{ drush_path }} --root {{ drupal_core_path }} cset islandora_riprap.settings riprap_local_settings_file {{ riprap_local_settings_file }} -y"
 
-- name: Create daily cron job
-  cron:
-    name: "Run fixity check"
-    minute: "0"
-    hour: "5"
-    job: "cd {{ riprap_home }}/riprap && php {{ riprap_home }}/riprap/bin/console app:riprap:check_fixity --settings={{ riprap_local_settings_file }}"
+- name: Set Riprap to run check_fixity via Drupal's cron
+  command: "{{ drush_path }} --root {{ drupal_core_path }} cset islandora_riprap.settings execute_riprap_in_cron 1 -y"
