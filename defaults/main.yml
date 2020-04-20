@@ -2,4 +2,4 @@
 # defaults file for IslandoraDevops.riprap
 riprap_home: /home/vagrant
 riprap_local_directory: /home/vagrant/riprap
-riprap_local_settings_file: /home/vagrant/riprap/islandora.yml
+riprap_local_settings_file: /home/vagrant/riprap/islandora_config.yml

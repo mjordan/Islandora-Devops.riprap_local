@@ -1,9 +1,9 @@
-- name: Check for Existing microservice
+- name: Check for Riprap local installation
   stat:
     path: "{{ riprap_home }}/riprap/vendor"
   register: riprap
 
-- name: Get Riprap Microservice from Github
+- name: Clone Riprap from Github
   git:
     repo: https://github.com/mjordan/riprap.git
     dest: "{{ riprap_home }}/riprap"
@@ -12,12 +12,19 @@
   when: riprap.stat.exists == False
   become: no
 
-- name: Composer Install Riprap Microservice
+- name: Composer install Riprap locally
   composer:
     command: install
     working_dir: "{{ riprap_home }}/riprap"
+    no_scripts: True
+    no_dev: True
+    optimize_autoloader: True
   ignore_errors: yes
   when: riprap.stat.exists == False
+  become: no
+
+- name: Copy islandora_config.yml for Riprap
+  copy: src=islandora_config.yml dest={{ riprap_home }}/riprap/islandora_config.yml
   become: no
 
 - name: Edit .env file
@@ -27,8 +34,9 @@
     line: 'DATABASE_URL=mysql://root:islandora@127.0.0.1:3306/riprap'
   become: no
 
-- name: Copy doctrine.yaml
+- name: Copy doctrine.yaml for MySQL
   copy: src=doctrine.yaml dest={{ riprap_home }}/riprap/config/packages/doctrine.yaml
+  become: no
 
 - name: Create Riprap database
   command: "php ./bin/console doctrine:database:create"
@@ -45,17 +53,17 @@
   args:
     chdir: "{{ riprap_home }}/riprap"
 
-- name: Install Drupal Islandora Riprap module from Github
+- name: Clone Islandora Riprap Drupal module from Github
   git:
     repo: https://github.com/mjordan/islandora_riprap.git
     dest: "{{ drupal_core_path }}/modules/contrib/islandora_riprap"
     force: yes
   become: no
 
-- name: Enable Riprap drupal module
+- name: Enable Riprap module
   command: "{{ drush_path }} --root {{ drupal_core_path }} -y en islandora_riprap"
 
-- name: Enable JSON:API module (not currently enabled by default
+- name: Enable JSON:API module
   command: "{{ drush_path }} --root {{ drupal_core_path }} -y en jsonapi"
 
 - name: Set Riprap mode 
@@ -66,3 +74,10 @@
 
 - name: Set Riprap local settings file
   command: "{{ drush_path }} --root {{ drupal_core_path }} cset islandora_riprap.settings riprap_local_settings_file {{ riprap_local_settings_file }} -y"
+
+- name: Create daily cron job
+  cron:
+    name: "Run fixity check"
+    minute: "0"
+    hour: "5"
+    job: "php {{ riprap_home }}/riprap/bin/console app:riprap:check_fixity --settings={{ riprap_local_settings_file }}"
