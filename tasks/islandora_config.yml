@@ -1,0 +1,42 @@
+# Sample Riprap config file for using Islandora/database plugins.
+# Requires that the "Riprap resource list" View be enabled in
+# the Islandora instance. This View is bundled with the Islandora Riprap
+# module.
+#
+# This plugin is agnostic to which media have fixity event checks performed
+# on them. The filters in the "Riprap resource list" View determine that.
+# See the View's filter criteria GUI for examples.
+
+####################
+# General settings #
+####################
+
+# thin: true
+fixity_algorithm: sha256
+
+# Absolute or relative to the Riprap application directory.
+failures_log_path: 'var/riprap_failed_events.log'
+
+###################
+# Plugin settings #
+###################
+
+# Use this plugin if you want to use the 'Riprap resource (media) list' View provided by Islandora Riprap.
+plugins.fetchresourcelist: ['PluginFetchResourceListFromDrupalView']
+drupal_baseurl: 'http://localhost:8000'
+drupal_user: admin
+drupal_password: islandora
+use_fedora_urls: true
+gemini_endpoint: 'http://localhost:8000/gemini'
+gemini_auth_header: 'Bearer islandora' 
+# Absolute or relative to the Riprap application directory.
+views_pager_data_file_path: 'var/fetchresourcelist.from.drupal.pager.txt'
+
+plugins.fetchdigest: PluginFetchDigestFromFedoraAPI
+fedoraapi_method: HEAD
+fedoraapi_digest_header_leader_pattern: "^.+="
+
+plugins.persist: PluginPersistToDatabase
+
+plugins.postcheck: ['PluginPostCheckCopyFailures']
+

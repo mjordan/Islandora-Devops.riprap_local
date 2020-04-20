@@ -80,4 +80,4 @@
     name: "Run fixity check"
     minute: "0"
     hour: "5"
-    job: "php {{ riprap_home }}/riprap/bin/console app:riprap:check_fixity --settings={{ riprap_local_settings_file }}"
+    job: "cd {{ riprap_home }}/riprap && php {{ riprap_home }}/riprap/bin/console app:riprap:check_fixity --settings={{ riprap_local_settings_file }}"

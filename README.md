@@ -1,6 +1,6 @@
 ## Overview
 
-Ansible role that installs [Riprap](https://github.com/mjordan/riprap) and the [Islandora Riprap](https://github.com/mjordan/islandora_riprap) module in the Islandora Playbook.
+Ansible role that installs [Riprap](https://github.com/mjordan/riprap) and the [Islandora Riprap](https://github.com/mjordan/islandora_riprap) module in the Islandora Playbook. It also adds a server cron job to run Riprap's `check_fixity` command daily at 5 a.m.
 
 This role is based on https://github.com/roblib/Islandora-Devops.riprap from the University of Prince Edward Island. It differs from UPEI's role in that it installs Riprap in "local" mode and not as an HTTP microservice.
 
