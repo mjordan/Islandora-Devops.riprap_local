@@ -1,6 +1,6 @@
 ## Overview
 
-Ansible role that installs [Riprap](https://github.com/mjordan/riprap) and the [Islandora Riprap](https://github.com/mjordan/islandora_riprap) module in the Islandora Playbook. It also configures Islandora Riprap to run Riprap's `check_fixity` command using Drupal's cron. It is intended to provide an easy-to-use installation of Riprap and Islandora Riprap for use on the VM more than for production use. 
+Ansible role that installs [Riprap](https://github.com/mjordan/riprap) and the [Islandora Riprap](https://github.com/mjordan/islandora_riprap) module in the [Islandora Playbook](https://github.com/Islandora-Devops/islandora-playbook). It also configures Islandora Riprap to perform fixity checks using Drupal's cron. It is intended to provide an easy-to-use installation of Riprap and Islandora Riprap for use on the VM more than for production use since running Riprap in local mode will likely not scale as high as running it on a separate server.
 
 This role is based on https://github.com/roblib/Islandora-Devops.riprap from the University of Prince Edward Island. It differs from UPEI's role in that it installs Riprap in "local" mode and not as an HTTP microservice.
 
@@ -11,9 +11,8 @@ This role is based on https://github.com/roblib/Islandora-Devops.riprap from the
 
 ## Author
 
-Mark Jordan (https://github.com/mjordan)
+Mark Jordan (https://github.com/mjordan), based on the work of [Alan Stanley](https://github.com/ajstanley) and others at UPEI.
 
 ## License
 
 MIT
-
