@@ -8,11 +8,10 @@
     repo: https://github.com/mjordan/riprap.git
     dest: "{{ riprap_home }}/riprap"
     force: yes
-    version: dotenv
   when: riprap.stat.exists == False
   become: no
 
-- name: Composer install Riprap locally
+- name: Install Riprap locally
   composer:
     command: install
     working_dir: "{{ riprap_home }}/riprap"
@@ -62,9 +61,6 @@
 
 - name: Enable Riprap module
   command: "{{ drush_path }} --root {{ drupal_core_path }} -y en islandora_riprap"
-
-- name: Enable JSON:API module
-  command: "{{ drush_path }} --root {{ drupal_core_path }} -y en jsonapi"
 
 - name: Set Riprap mode 
   command: "{{ drush_path }} --root {{ drupal_core_path }} cset islandora_riprap.settings riprap_mode local -y"

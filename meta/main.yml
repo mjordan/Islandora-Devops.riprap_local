@@ -1,6 +1,6 @@
 ---
 galaxy_info:
-  author: Robertson Library
+  author: Mark Jordan, based on the work initially done at Robertson Library
   description: Ansible Galaxy role for installing Riprap
   company: Islandora Foundation
   license: MIT
@@ -15,9 +15,5 @@ galaxy_info:
         - 7
   galaxy_tags:
     - islandora
-    - CLAW
     - riprap
-    - server
-    - web
-    - installer
 dependencies: []
